@@ -35,8 +35,7 @@ from webob import exc
 
 def auth_user_id():
     try:
-        auth_id = angularpy.auth_id._current_obj()
-        return auth_id
+        return pyblox.auth_id._current_obj()
     except TypeError:
         return None
 
@@ -47,6 +46,7 @@ def save_auth(req, user):
     req.environ["paste.auth.cookie"].append('AUTH_ID')
     req.environ["paste.auth.cookie"].append('PERMISSIONS')
     session['user'] = user
+    session['full_name'] = user.full_name
     session.save()
 
     return req

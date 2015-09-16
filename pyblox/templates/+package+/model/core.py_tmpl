@@ -16,9 +16,9 @@ log = logging.getLogger(__name__)
 
 
 class Group(BaseDatabase):
-    """Groups for Users
+    '''Groups for Users
 
-    """
+    '''
     __tablename__ = 'groups'
 
     id = Column(Integer, autoincrement=True, primary_key=True)
@@ -26,7 +26,7 @@ class Group(BaseDatabase):
     description = Column(UnicodeText)
     created_date = Column(DateTime, default=datetime.now())
 
-    permissions = relationship("Permission", secondary=group_permissions, backref='groups')
+    permissions = relationship('Permission', secondary=group_permissions, backref='groups')
 
     @property
     def permissions(self):
@@ -45,58 +45,58 @@ class Group(BaseDatabase):
 
 
 class Permission(BaseDatabase):
-    """Permissions for groups
+    '''Permissions for groups
 
-    """
+    '''
     __tablename__='permissions'
 
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(Unicode(32), default=u'Unknown')
     description = Column(Unicode(255), default=u'Unknown')
 
-    groups = relationship("Group", secondary=group_permissions, backref='permissions')
+    groups = relationship('Group', secondary=group_permissions, backref='permissions')
 
     def __init__(self, name, description=None):
         self.name = name
         self.description = description or name
 
     def __repr__(self):
-        return "{0}".format(self.name)
+        return '{0}'.format(self.name)
 
     def __str__(self):
         return self.name
 
 
 class User(BaseDatabase):
-    """User model
+    '''User model
 
-    """
+    '''
     __tablename__='users'
 
     id = Column(Integer, autoincrement=True, primary_key=True)
     username = Column(Unicode(128), unique=True, nullable=False)
     company_id = Column(Integer, ForeignKey('companies.id', onupdate='CASCADE', ondelete='CASCADE'))
-    first_name = Column(Unicode(128), nullable=True)
-    last_name = Column(Unicode(128), nullable=True)
-    address = Column(Unicode(64), nullable=True)
-    address_2 = Column(Unicode(64), nullable=True)
-    city = Column(Unicode(64), nullable=True)
-    state = Column(Unicode(32))
-    postal_code = Column(Unicode(15))
-    telephone = Column(Unicode(15), nullable=True)
-    extension = Column(Unicode(8), nullable=True)
-    mobile = Column(Unicode(15), nullable=True)
+    contact_id = Column(Integer, ForeignKey('contacts.id', onupdate='CASCADE', ondelete='CASCADE'))
+    settings = Column(UnicodeText, default=unicode(dumps({'login_url': '/#/dashboard'})))
     created = Column(DateTime, default=datetime.now())
     active = Column(Boolean, default=True)
 
+    user_contacts = relationship('Contact', secondary='user_contacts', backref='users')
     groups = relationship(Group, secondary='user_groups', backref='users')
-    shipping_address = relationship('ShippingAddress', secondary='user_shipping_addresses',
-                                    backref='users')
+
     _hashword = Column(Unicode(255), nullable=False)
+
+    @property
+    def contact(self):
+        return Contact.query.get(self.contact_id)
+
+    @property
+    def company(self):
+        return Company.query.get(self.company_id)
 
     @classmethod
     def by_id(cls, id):
-        return cls.query.filter(User.id==id).first()
+        return cls.query.get(id)
 
     @classmethod
     def by_company_id(cls, id):
@@ -108,12 +108,17 @@ class User(BaseDatabase):
 
     @property
     def company(self):
-        return Company.query.filter_by(id=self.company_id).first()
+        return Company.query.get(self.company_id)
+
+    @property
+    def company_name(self):
+        return str(Company.query.get(self.company_id))
 
     @property
     def full_name(self):
-        if self.first_name or self.last_name:
-            return str(self.first_name) + ' ' + str(self.last_name)
+        me = Contact.query.get(self.contact_id)
+        if me.first_name or me.last_name:
+            return str(me.first_name) + ' ' + str(me.last_name)
         return self.username
 
     @property
@@ -126,7 +131,7 @@ class User(BaseDatabase):
 
     def add_groups(self, groups):
         try:
-            assert type(groups) == list, "Groups needs to be a list."
+            assert type(groups) == list, 'Groups needs to be a list.'
             # XXX: Fix hack.
             for group in self.groups:
                 self.groups.remove(group)
@@ -135,7 +140,7 @@ class User(BaseDatabase):
                 self.groups.append(group)
 
         except Exception as e:
-            log.error("Excepted: {0}".format(e))
+            log.error('Excepted: {0}'.format(e))
             pass
 
     def _set_password(self, password):
@@ -168,60 +173,114 @@ class User(BaseDatabase):
         return self._hashword[40:] == hashed_pass.hexdigest()
 
     def __repr__(self):
-        return '<User({0},{1},{2},{3},{4},{5},{6},{7},{8},{9})>'.format(
-            self.id, self.username, self.company_id, self.first_name,
-            self.last_name, self.telephone, self.extension, self.mobile,
-            self.created, self.active)
+        return '<User({0},{1},{2},{3},{4},{5},{6})>'.format(
+            self.id, self.username, self.company_id, self.first_name, self.last_name, self.created, self.active)
+
+
+class CompanyTypes(BaseDatabase):
+    __tablename__= 'company_types'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    name = Column(Unicode(128), nullable=False)
+    description = Column(UnicodeText)
+    created_date = Column(DateTime, default=datetime.now())
 
 
 class Company(BaseDatabase):
-    """Company
+    '''Company
 
-    """
+    '''
     __tablename__= 'companies'
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    parent_id = Column(Integer, ForeignKey('companies.id', onupdate='CASCADE', ondelete='CASCADE'))
+    company_type_id = Column(Integer, ForeignKey('company_types.id', onupdate='CASCADE', ondelete='CASCADE'))
+    name = Column(Unicode(128), nullable=False)
+    settings = Column(UnicodeText)
+
+    address = Column(Unicode(64), nullable=True)
+    address_2 = Column(Unicode(64), nullable=True)
+    city = Column(Unicode(64), nullable=True)
+    state = Column(Unicode(32))
+    postal_code = Column(Unicode(15))
+
+    start_date = Column(DateTime, default=datetime.date(datetime.now()))
+    end_date = Column(DateTime, nullable=True)
+    last_login = Column(DateTime, default=datetime.date(datetime.now()))
+    domain = Column(Unicode(255), nullable=True)
+    hostname = Column(Unicode(255), nullable=True)
+    logo_file_name = Column(Unicode(255), nullable=True)
+    url = Column(Unicode(255), nullable=True)
+    facebook_url = Column(Unicode(255), nullable=True)
+    twiter_url = Column(Unicode(255), nullable=True)
+    linkedin_url = Column(Unicode(255), nullable=True)
+    description = Column(UnicodeText, nullable=True)
+
+    primary_telephone = Column(Unicode(15), nullable=True)
+    primary_extension = Column(Unicode(8), nullable=True)
+    secondary_telephone = Column(Unicode(15), nullable=True)
+    secondary_extension = Column(Unicode(8), nullable=True)
+
+    administrative_email = Column(Unicode(128), nullable=True)
+    billing_email = Column(Unicode(128), nullable=True)
+    technical_email = Column(Unicode(128), nullable=True)
+
+    active = Column(Boolean, default=True)
+
+    users = relationship('User', backref='companies')
+    contacts = relationship('Contact', backref='companies')
+    shipping_addresses = relationship('Address', secondary='company_shipping_addresses', backref='companies')
+
+    def __repr__(self):
+        return '<Customer({0},{1},{2},{3},{4},{5},{6}>'.format(
+            self.id, self.name, self.start_date, self.end_date, self.last_login, self.url, self.active)
+
+    def __str__(self):
+        return self.name
+
+
+class Address(BaseDatabase):
+    '''Addresses
+
+    '''
+    __tablename__='addresses'
+
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    address_type_id = Column(Integer, default=1)
     name = Column(Unicode(128), nullable=False)
     address = Column(Unicode(64), nullable=True)
     address_2 = Column(Unicode(64), nullable=True)
     city = Column(Unicode(64), nullable=True)
     state = Column(Unicode(32))
     postal_code = Column(Unicode(15))
-    email = Column(Unicode(128), nullable=True)
-    telephone = Column(Unicode(15), nullable=True)
-    extension = Column(Unicode(8), nullable=True)
-    mobile = Column(Unicode(15), nullable=True)
-    start_date = Column(DateTime, default=datetime.date(datetime.now()))
-    end_date = Column(DateTime, nullable=True)
-    last_login = Column(DateTime, default=datetime.date(datetime.now()))
-    url = Column(Unicode(100), nullable=True)
-    active = Column(Boolean, default=True)
-
-    users = relationship("User", backref="companies")
-    shipping_addresses = relationship("ShippingAddress", secondary="company_shipping_addresses",
-                                      backref="companies")
-
-    def __repr__(self):
-        return "<Customer({0},{1},{2},{3},{4},{5},{6}>".format(
-            self.id, self.name, self.start_date, self.end_date, self.last_login, self.url,
-            self.active)
-
-    def __str__(self):
-        return self.name
 
 
-class ShippingAddress(BaseDatabase):
-    """Shipping Addresses users and companies.
-
-    """
-    __tablename__='shipping_addresses'
+class Contact(BaseDatabase):
+    __tablename__='contacts'
 
     id = Column(Integer, autoincrement=True, primary_key=True)
+    contact_type_id = Column(Integer, default=1)
+    company_id = Column(Integer, ForeignKey('companies.id', onupdate='CASCADE', ondelete='CASCADE'))
+    first_name = Column(Unicode(128), nullable=False)
+    last_name = Column(Unicode(128), nullable=False)
+
+    primary_telephone = Column(Unicode(15), nullable=True)
+    primary_extension = Column(Unicode(8), nullable=True)
+    secondary_telephone = Column(Unicode(15), nullable=True)
+    secondary_extension = Column(Unicode(8), nullable=True)
+
+    primary_email = Column(Unicode(128), nullable=True)
+    secondary_email = Column(Unicode(128), nullable=True)
+
     address = Column(Unicode(64), nullable=True)
     address_2 = Column(Unicode(64), nullable=True)
     city = Column(Unicode(64), nullable=True)
     state = Column(Unicode(32))
     postal_code = Column(Unicode(15))
+
+    shipping_addresses = relationship('Address', secondary='contact_shipping_addresses', backref='contacts')
+
+
 
 
 

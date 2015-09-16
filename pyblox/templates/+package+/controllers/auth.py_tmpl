@@ -27,7 +27,7 @@ class AuthController(BaseController):
                 return html_render()
 
         except ${project}Error as e:
-            log.error("Excepted: {0}".format(e))
+            log.error('Excepted: {0}'.format(e))
             return html_render(is_error=True, message=str(e))
 
     @jsonify
@@ -44,14 +44,15 @@ class AuthController(BaseController):
             if user and user.check_password(password) and user.active:
                 self.request = save_auth(self.request, user)
             else:
-                raise ${project}Error("Invalid login username or password. Please try again.")
+                raise ${project}Error('Invalid login username or password. Please try again.')
 
         except ${project}Error as e:
-            log.error("Excepted: {0}".format(e))
+            log.error('Excepted: {0}'.format(e))
             return {'is_error': True, 'message': str(e)}
         else:
-            log.debug("User authenticated.")
-            return {'is_error': False, 'url': '/admin/#/dashboard',
+            log.debug('User authenticated.')
+            url = loads(user.settings).get('login_url', '/#/dashboard')
+            return {'is_error': False, 'url': url,
                     'message': 'Successfully logged in {0}'.format(username)}
     @jsonify
     def logout(self, *args, **kwargs):

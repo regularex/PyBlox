@@ -3,17 +3,16 @@ from ${package}.model import db
 from json import loads, dumps
 from datetime import datetime
 
-from sqlalchemy.types import DateTime, Boolean
-from sqlalchemy import Column
-from sqlalchemy.types import UnicodeText
+from sqlalchemy import ForeignKey, Column
+from sqlalchemy.types import Integer, DateTime, Boolean, Unicode, UnicodeText
+from sqlalchemy.ext.declarative import declared_attr
 
-__all__=['DatabaseMixin']
+__all__=['DatabaseMixin', 'BaseRestMixin']
 
 
 class DatabaseMixin(object):
-    """Base class for DB Model
-
-    """
+    '''Base class for DB Model
+    '''
     query = db.query_property()
 
     def __eq__(self, other):
@@ -31,12 +30,11 @@ class DatabaseMixin(object):
 
         :param data:
         :return:
-
         '''
         try:
             self = cls()
             if type(data) is not dict:
-                raise TypeError("You need to pass a dictionary for create.")
+                raise TypeError("You need to pass a dictionary for the create method.")
             for k in self.__table__.columns._data.keys():
                 if k in data:
                     if type(getattr(self, k)) == datetime:
@@ -50,7 +48,8 @@ class DatabaseMixin(object):
                         setattr(self, k, data.get(k))
             if 'password' in data:
                 setattr(self, 'password', data.get('password'))
-        except:
+        except Exception as e:
+            print "Excepted: {0}".format(e)
             return None
         else:
             return self
@@ -82,10 +81,10 @@ class DatabaseMixin(object):
         return cls.query.all()
 
     def todict(self):
-        """JSON PG Date object serializer, and whatever else is
+        '''JSON PG Date object serializer, and whatever else is
         needed for convenience...
 
-        """
+        '''
         def convert_datetime(val, long_date=False):
             if long_date:
                 return val.strftime("%m/%d/%Y %H:%M:%S") if val else ""
@@ -102,8 +101,52 @@ class DatabaseMixin(object):
         return d
 
     def iterfunc(self):
-        """Returns an iterable that supports .next()
+        '''Returns an iterable that supports .next()
         so we can do dict(cls_instance)
 
-        """
+        '''
         return self.todict()
+
+
+class BaseRestMixin(object):
+    '''Base class mixin for ReST.
+
+    '''
+    @classmethod
+    def rest_router(cls, request, id=None):
+        routes = {'GET': 'get_all', 'POST': 'create', 'DELETE': 'delete'}
+
+        if id:
+            routes.update({'GET': 'get_one', 'POST': 'update'})
+            if request.method == 'POST':
+                data = loads(request.body)
+                return getattr(cls, routes[request.method])(data, id)
+
+            return getattr(cls, routes[request.method])(id)
+        else:
+            if request.method == 'POST':
+                data = loads(request.body)
+                return getattr(cls, routes[request.method])(data)
+
+            return getattr(cls, routes[request.method])()
+
+    @classmethod
+    def create(cls, *args, **kwargs):
+        raise NotImplementedError("You must implement a create function in {0}.".format(cls.__class__.__name__))
+
+    @classmethod
+    def update(cls, data, id, *args, **kwargs):
+        raise NotImplementedError("You must implement a update function in {0}.".format(cls.__class__.__name__))
+
+    @classmethod
+    def get_one(cls, id, *args, **kwargs):
+        raise NotImplementedError("You must implement a get_one function in {0}.".format(cls.__class__.__name__))
+
+    @classmethod
+    def get_all(cls, *args, **kwargs):
+        raise NotImplementedError("You must implement a get_all function in {0}.".format(cls.__class__.__name__))
+
+    @classmethod
+    def delete(cls, id, *args, **kwargs):
+        raise NotImplementedError("You must implement a delete function in {0}.".format(cls.__class__.__name__))
+

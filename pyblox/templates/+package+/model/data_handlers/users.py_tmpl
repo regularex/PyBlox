@@ -1,0 +1,183 @@
+import os
+import logging
+
+from pyblox import tmpl_context as c, session
+
+from ${package}.model import db
+from ${package}.model.core import User, Group, Company, Contact
+from ${package}.lib.errors import ${project}Error, ${project}KeyError
+from ${package}.model.base import BaseRestMixin
+
+from simplejson import loads, dumps
+from sqlalchemy.sql import and_, or_, not_
+from sqlalchemy import Column, Date, cast, desc, asc
+
+log = logging.getLogger(__name__)
+
+
+class UserDataHandler(BaseRestMixin):
+    ''' The User data handler mixin class to support the ReST API and interface other data operations.
+
+    '''
+    @classmethod
+    def get_all(cls, *args, **kwargs):
+        '''This function returns all Channel Partners in the system.
+
+           :returns: JSON
+           :raises: ${project}KeyError, ${project}Error
+
+        .. note:: This user must be authenticated with elevated credentials to use this method.
+        '''
+        items = []
+
+        try:
+            query_object = (
+                db.query(User)
+                    .join(Company, Company.id==User.company_id)
+                    .order_by(asc(Company.id))
+            )
+
+            for user in query_object.all():
+                u = user.todict()
+                u.update({'company_name': user.company_name, 'full_name': user.full_name,
+                          'company': user.company.todict(), 'contact': user.contact.todict()})
+                items.append(u)
+
+            log.debug("User items: {0}".format(items))
+
+        except ${project}KeyError as e:
+            return [{'is_error': True, 'message': 'KeyError {0}'.format(e)}]
+        except ${project}Error as e:
+            return [{'is_error': True,
+                    'message': 'Failed to retrieve user: {0}'.format(e)}]
+        except Exception as e:
+            return {'is_error': True, 'count': 0, 'users': [],
+                    'message': 'Failed to retrieve Channel Partner: {0}'.format(e)}
+        else:
+            return {'is_error': False, 'message': 'There are {0} users.'.format(len(items)),
+                    'count': len(items), 'users': items}
+
+    @classmethod
+    def get_one(cls, id, *args, **kwargs):
+        '''This function retrieves one User for a database ID
+
+           :param id: The database ID for this user.
+           :type id: Integer
+           :returns: JSON
+           :raises: ${project}KeyError, ${project}Error
+
+        .. note:: Gets one User
+
+        '''
+        try:
+            user = User.query.get(id)
+            u = user.todict()
+            u.update({'company_name': user.company_name, 'full_name': user.full_name})
+            u.update(user.contact.todict())
+
+            assert u is not None, "Failed to retrieve user."
+
+        except ${project}KeyError as e:
+            return {'is_error': True, 'message': 'KeyError: {0}'.format(e)}
+        except ${project}Error as e:
+            return {'is_error': True,
+                    'message': 'Failed to retrieve user: {0}'.format(e)}
+        except Exception as e:
+            return {'is_error': True, 'user': None,
+                    'message': 'Failed to retrieve user: {0}'.format(e)}
+        else:
+            return {'is_error': False, 'message': 'Successfully retrieved user: {0}'.format(user.name), 'user': u}
+
+    @classmethod
+    def create(cls, data, **kwargs):
+        '''This function creates a Gateway.
+
+           :param request.params: POST'd data
+           :type request.params: Multidict
+           :returns: JSON
+           :raises: ${project}KeyError, ${project}Error
+
+        '''
+        try:
+            company_id = data["user"].get("company").get('id')
+
+            data["user"].update({'company_id': company_id})
+            contact = Contact.create(data["user"])
+            db.add(contact)
+            db.flush()
+
+            assert contact is not None, "Failed to create Contact"
+
+            data["user"].update({'contact_id': contact.id,
+                                 'settings': unicode(dumps({'login_url': '/partner/#/dashboard'}))})
+            user = User.create(data["user"])
+            db.add(user)
+            db.flush()
+            user.groups.append(Group.query.get(4))
+
+            assert user is not None, "Failed to create User"
+
+        except ${project}Error as e:
+            db.rollback()
+            log.debug("Excepted: {0}".format(e))
+            return {'is_error': True,
+                    'message': 'Failed to create User: {0}'.format(e)}
+        except Exception as e:
+            db.rollback()
+            log.debug("Excepted: {0}".format(e))
+            return {'is_error': True,
+                    'message': 'Failed to create User: {0}'.format(e)}
+        else:
+            db.commit()
+            return {'is_error': False,
+                    'message': 'Successfully created User: {0}'.format(user.full_name)}
+        finally:
+            db.close()
+
+    @classmethod
+    def update(cls, data, id, *args, **kwargs):
+        '''This function creates a Gateway.
+
+           :param request.params: POST'd data
+
+           :type request.params: Multidict
+           :returns: JSON
+           :raises: ${project}KeyError, ${project}Error
+
+        '''
+        try:
+            contact = Contact.query.get(data.get("data").get('contact_id'))
+            contact.update(data["data"])
+            db.commit()
+
+            assert contact is not None, "Failed to update Contact"
+
+            user = User.query.get(id)
+            user.update(data["data"])
+            db.commit()
+
+            assert user is not None, "Failed to update User"
+
+        except ${project}Error as e:
+            db.rollback()
+            log.debug("Excepted: {0}".format(e))
+            return {'is_error': True,
+                    'message': 'Failed to update User: {0}'.format(e)}
+        except Exception as e:
+            db.rollback()
+            log.debug("Excepted: {0}".format(e))
+            return {'is_error': True,
+                    'message': 'Failed to update User: {0}'.format(e)}
+        else:
+            return {'is_error': False,
+                    'message': 'Successfully updated User: {0}'.format(user.full_name)}
+        finally:
+            db.close()
+
+    @classmethod
+    def delete(cls, id, *args, **kwargs):
+        user = User.query.get(id)
+        db.delete(user)
+        db.commit()
+        return {'is_error': False,
+                'message': 'Successfully deleted user: {0}'.format(user.full_name)}
