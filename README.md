@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 PyBlox  0.1
 ================
 
@@ -28,3 +29,7 @@ If you want PostgreSQL support, just add psycopg2 to your module dependencies an
 
 
 
+=======
+# PyBlox
+A modern Python framework for SPA web applications.
+>>>>>>> 44b9d4e7beda7db182a73342a106e1b721792d88
