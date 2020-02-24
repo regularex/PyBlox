@@ -33,10 +33,11 @@ import itertools
 import types
 import random
 import cgi
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+# try:
+#     from cStringIO import StringIO
+# except ImportError:
+#     from StringIO import StringIO
+from io import StringIO
 
 from beaker.middleware import SessionMiddleware
 from paste.cascade import Cascade
@@ -54,7 +55,7 @@ from webob import Request, Response
 from webob import exc
 from webob.exc import HTTPForbidden
 
-from weberror.evalexception import make_eval_exception
+#from weberror.evalexception import make_eval_exception
 from weberror.errormiddleware import ErrorMiddleware
 from pyblox import tmpl_context as c, session
 

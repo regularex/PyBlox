@@ -73,7 +73,7 @@ class PyBloxConfig(dict):
         # Load the MIMETypes with its default types
         MIMETypes.init()
 
-        for key, val in copy.deepcopy(self.defaults).iteritems():
+        for key, val in copy.deepcopy(self.defaults).items():
             conf.setdefault(key, val)
 
         if 'cache_dir' in conf:
