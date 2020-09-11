@@ -46,7 +46,6 @@ ipython-genutils==0.2.0
 itsdangerous==1.1.0
 Jinja2==2.9.6
 kombu==4.6.7
--e git+git@bitbucket.org:legendea/legendanalytics-backend.git@b39154cd8d3eb0914e28b4fe1a0dc9df48447434#egg=LegendAnalytics
 lupa==1.9
 MarkupSafe==1.0
 meld3==1.0.2
@@ -56,7 +55,6 @@ nose==1.3.7
 olefile==0.44
 paho-mqtt==1.3.1
 parsedatetime==2.1
--e git+http://git@github.com/regularex/PyBlox.git@8f14fa86019ede6c768273acb55f6b6fe6151685#egg=Paste&subdirectory=libs/paste-3.2.3
 PasteDeploy==1.5.2
 PasteScript==2.0.2
 pathlib2==2.3.0
@@ -74,7 +72,6 @@ ptyprocess==0.5.2
 py3dns==3.2.0
 pyasn1==0.4.2
 pyasn1-modules==0.2.1
--e git+http://git@github.com/regularex/PyBlox.git@8f14fa86019ede6c768273acb55f6b6fe6151685#egg=PyBlox
 pycparser==2.18
 pyflakes==1.5.0
 Pygments==2.2.0
