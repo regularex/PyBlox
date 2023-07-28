@@ -25,13 +25,13 @@ setup(name="PyBlox",
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          "PasteScript==3.30",
+          "PasteScript==3.3.0",
           "PasteDeploy==3.0.1",
       ],
       dependency_links=[
-          'git+git@github.com:regularex/paste.git#egg=paste'
+          "git+git@github.com:regularex/paste.git#egg=paste"
       ]      
-      setup_requires=["PasteScript>=1.7.5"],
+      setup_requires=["PasteScript==3.3.0],
       entry_points="""
       [paste.paster_create_template]
       PyBlox = pyblox.tmplt:PyBloxTemplate
