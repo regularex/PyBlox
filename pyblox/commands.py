@@ -13,7 +13,7 @@ Commands available:
 ``restcontroller``
     Create a REST Controller and accompanying functional test
 ``shell``
-    Open an interactive shell with the Pylons app loaded
+    Open an interactive shell with the pyblox app loaded
 
 Example usage::
 
@@ -38,10 +38,11 @@ Example usage::
     This same system is used when running :command:`paster create` to
     determine what templates are available when creating new projects.
 
+    Thanks to Ben Bangert for his awesome MVC project Pylons.
+
 """
 import os
 import sys
-import logging
 
 import paste.fixture
 import paste.registry

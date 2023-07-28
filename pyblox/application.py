@@ -43,7 +43,7 @@ from paste.errordocument import StatusKeeper
 
 log = logging.getLogger(__name__)
 
-class AngularPyContext(object):
+class PyBloxContext(object):
     '''This is the class that holds all the context variables per request.
 
     '''
@@ -97,7 +97,7 @@ class WSGIApp(object):
         response = Response()
 
         # Store a copy of the request/response in environ for faster access
-        obj = AngularPyContext()
+        obj = PyBloxContext()
         obj.config = self.config
         obj.request = req
         obj.response = response
@@ -109,7 +109,7 @@ class WSGIApp(object):
         environ['pyblox.pyblox'] = obj
         environ['pyblox.environ_config'] = self.environ_config
 
-        tmpl_context = AngularPyContext()
+        tmpl_context = PyBloxContext()
         obj.tmpl_context = req.tmpl_context = tmpl_context
 
         if self._session_key in environ:

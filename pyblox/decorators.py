@@ -64,11 +64,10 @@ loader = TemplateLoader(
     auto_reload=True
 )
 
-# Forwarding for internals
 def forward(url, code=301):
     raise ForwardRequestException(url)
 
-# Redirect for urls
+
 def redirect(url):
     raise exc.HTTPTemporaryRedirect(location=url)
 
@@ -139,6 +138,7 @@ def authorize(valid):
             return AuthenticationError(e)
     return decorator(validate)
 
+
 # Decorator for Genshi rendering.
 def xml(filename, method='html', encoding='utf-8', **options):
     """Decorator for exposed methods to specify what template they should use
@@ -163,6 +163,7 @@ def xml(filename, method='html', encoding='utf-8', **options):
         return wrapper
     return decorate
 
+
 # Genshi rendering for the decorator above.
 def xml_render(*args, **kwargs):
     """Function to render the given data to the template specified via the
@@ -182,6 +183,7 @@ def xml_render(*args, **kwargs):
     # ctxt = Context()
     # ctxt.push(kwargs)
     return template.generate(g=g, c=c, session=session, *args, **kwargs)
+
 
 # Jinjna2 Template decorator.
 def html(filename):
@@ -205,6 +207,7 @@ def html_render(*args, **kwargs):
     else:
         template = c.template
     return template.render(session=session, g=g, c=c, *args, **kwargs)
+
 
 # JSON output decorator - (supports args, parenthesis, or not).
 def jsonify(func):

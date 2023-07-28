@@ -43,7 +43,6 @@ class ColorFormatter(logging.Formatter):
     """Custom log formatter which colorizes console output
 
     """
-
     def __init__(self, *args, **kwargs):
         logging.Formatter.__init__(self, *args, **kwargs)
 
