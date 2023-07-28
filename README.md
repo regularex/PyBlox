@@ -26,4 +26,6 @@ That's it! Now browse to http://127.0.0.1:8080/
 
 If you want PostgreSQL support, just add psycopg2 to your module dependencies and use the usual connection string syntax in the development.ini. Stay tuned for the web site. We have some configuration options for various javascript toolkit support options coming. pg_config might fail, so you will have to get it in your $PATH before insalling psycopg2 e.g. (find /var/lib -name pg_config -exec ln -s {} /usr/bin \;) or your bashrc or shell profile evironment etc.
 
+---------------------
 
+pip install -e libs/paste-3.2.3;

@@ -116,7 +116,7 @@ class Credential(object):
                     return False
                 else:
                     return False
-            except Exception, e:
+            except Exception as e:
                 log.debug("Excepted in credential: %s" % e)
                 return False
         else:
@@ -135,7 +135,7 @@ def authorize(valid):
                 log.debug("User permissions or not logged in...")
                 g = pyblox.app_globals._current_obj()
                 return forward(g.login_path, 301)
-        except AuthenticationError, e:
+        except AuthenticationError as e:
             return AuthenticationError(e)
     return decorator(validate)
 
@@ -214,7 +214,7 @@ def jsonify(func):
             string = fn(*args, **kwargs)
             def json_response(string):
                 res = Response(content_type='application/json')
-                res.body = dumps(string)
+                res.text = dumps(string)
                 return res
             return json_response(string)
         return wrapper

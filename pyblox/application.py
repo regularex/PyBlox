@@ -36,7 +36,7 @@ import sys
 import logging
 import pyblox
 from pyblox import config, auth_id, permissions
-from paste.debug.profile import profile_decorator
+# from paste.debug.profile import profile_decorator
 from paste.recursive import ForwardRequestException
 from paste.recursive import RecursiveMiddleware
 from paste.errordocument import StatusKeeper
@@ -167,7 +167,7 @@ class WSGIApp(object):
                     raise ForwardRequestException(self.globals.login_path)
 
             # See if it is just a string output
-            if isinstance(resp, basestring):
+            if isinstance(resp, str):
                 resp = Response(body=resp)
 
             if resp is None:
