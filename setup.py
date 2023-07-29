@@ -31,7 +31,7 @@ setup(name="PyBlox",
       dependency_links=[
           "git+git@github.com:regularex/paste.git#egg=paste"
       ]      
-      setup_requires=["PasteScript==3.3.0],
+      setup_requires=["PasteScript==3.3.0"],
       entry_points="""
       [paste.paster_create_template]
       PyBlox = pyblox.tmplt:PyBloxTemplate
